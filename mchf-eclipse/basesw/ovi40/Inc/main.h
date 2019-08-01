@@ -69,8 +69,10 @@
 #define CS_SD_Card_GPIO_Port GPIOF
 #define opt_SW_E2_Pin GPIO_PIN_5
 #define opt_SW_E2_GPIO_Port GPIOF
+#define opt_SW_E2_EXTI_IRQn EXTI9_5_IRQn
 #define opt_SW_E3_Pin GPIO_PIN_10
 #define opt_SW_E3_GPIO_Port GPIOF
+#define opt_SW_E3_EXTI_IRQn EXTI15_10_IRQn
 #define Button_M3_Pin GPIO_PIN_1
 #define Button_M3_GPIO_Port GPIOC
 #define opt_SW_SD_Pin GPIO_PIN_7
@@ -91,6 +93,7 @@
 #define LED_BLUE_GPIO_Port GPIOF
 #define opt_SW_E1_Pin GPIO_PIN_13
 #define opt_SW_E1_GPIO_Port GPIOF
+#define opt_SW_E1_EXTI_IRQn EXTI15_10_IRQn
 #define BAND0_Pin GPIO_PIN_0
 #define BAND0_GPIO_Port GPIOG
 #define opt_BAND3_Pin GPIO_PIN_1
@@ -137,7 +140,29 @@
 #define keyer_dot_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
+// Husarek DSP
+// wyjścia PCF8574 na płytkce BPFów
+#define INPUT 0
+#define OUTPUT 1
+#define INPUT_PULLUP 2
+#define LOW 0
+#define HIGH 1
+//#define PCF8574_RF_adres 0x42
+//#define PCF8574_adres 0x40
+#define PCF8574_RF_adres 0x72 // PCF8574A płytka DW radio
+#define PCF8574_adres 0x70    // FPP PCF8574A A2A1A0 = 0x00
 
+#define A_Pin   3 // wyjścia BCD do sterowania przełącznika pasm w BPF
+#define B_Pin   0
+#define C_Pin   1
+#define D_Pin   2
+#define TX_BIAS_Pin 4 // wyjście sterowania Biasem w PA
+#define R_T_Pin   5 // wyjście R_T PCF8574 - nadawanie/odbiór sterowane z PTT
+// wyjścia PCF8574 w module RF
+#define ATT_pin   1 // włączanie tłumika 20dB
+#define AMP1_pin      2 // włączanie wzm. w.cz.
+#define AMP2_pin      3 // włączanie przedwzm. m.cz.
+#define TX_pin        6 // przełączanie toru IQ nadawanie/odbiór w module RF
 /* USER CODE END Private defines */
 
 /**
