@@ -189,6 +189,33 @@ static void Board_BandCntr_Init(void)
     // Pulse the latch relays line, active low, so set high to disable
     GPIO_SetBits(BAND2_PIO,BAND2);
 }
+// Husarek DSP
+static void Husarek_DSP_init()
+{
+    // inicjalizacja PCFa w BPF
+    PCF8574_begin(PCF8574_adres);
+    PCF8574_clear();
+    PCF8574_pinMode(R_T_Pin, OUTPUT);
+    PCF8574_digitalWrite(R_T_Pin, LOW);
+    PCF8574_pinMode(TX_BIAS_Pin, OUTPUT);
+    PCF8574_digitalWrite(TX_BIAS_Pin, LOW);
+    PCF8574_pinMode(A_Pin, OUTPUT);
+    PCF8574_pinMode(B_Pin, OUTPUT);
+    PCF8574_pinMode(C_Pin, OUTPUT);
+    PCF8574_pinMode(D_Pin, OUTPUT);
+    // inicjacja PCFa w module RF
+    PCF8574_RF_begin(PCF8574_RF_adres);
+    PCF8574_RF_clear();
+    PCF8574_RF_pinMode(ATT_pin, OUTPUT);
+    PCF8574_RF_digitalWrite(ATT_pin, LOW);
+    PCF8574_RF_pinMode(AMP1_pin, OUTPUT);
+    PCF8574_RF_digitalWrite(AMP1_pin, LOW);
+    PCF8574_RF_pinMode(AMP2_pin, OUTPUT);
+    PCF8574_RF_digitalWrite(AMP2_pin, LOW);
+    PCF8574_RF_pinMode(TX_pin, OUTPUT);
+    PCF8574_RF_digitalWrite(TX_pin, LOW);
+    // switch_bands(ts.band); ToDo brak widoczności funkcji
+}
 
 static void Board_Touchscreen_Init()
 {
@@ -239,6 +266,8 @@ void Board_InitMinimal()
 
     // Initialize LO
     Osc_Init();
+    // Husarek DSP
+    Husarek_DSP_init();
 
     // TO HERE: Code be moved to init_full() if we figure out what causes the white screen @MiniTRX SPI
 
@@ -730,6 +759,10 @@ void Board_EnableTXSignalPath(bool tx_enable)
         // QSE Mixer Output Enable (U17)
         // Codec LineIn comes from mcHF LineIn Socket (U3)
         // Codec LineOut connected to QSE mixer (IQ Out) (U3a)
+        // Husarek DSP
+        // PCF w module BPF
+        PCF8574_digitalWrite(R_T_Pin, HIGH);
+        PCF8574_RF_digitalWrite(TX_pin, HIGH);
     }
     else
     {
@@ -741,6 +774,10 @@ void Board_EnableTXSignalPath(bool tx_enable)
         // QSE Mixer Output Disable (U17)
         // Codec LineIn comes from RF Board QSD mixer (IQ In) (U3)
         // Codec LineOut disconnected from QSE mixer  (IQ Out) (U3a)
+        // Husarek DSP
+        // PCF w module BPF
+        PCF8574_digitalWrite(R_T_Pin, LOW);
+        PCF8574_RF_digitalWrite(TX_pin, LOW);
     }
 }
 

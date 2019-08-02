@@ -605,6 +605,8 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
 void RadioManagement_DisablePaBias()
 {
     Board_SetPaBiasValue(0);
+    // Husarek DSP
+    PCF8574_digitalWrite(R_T_Pin, LOW);
 }
 
 /**
@@ -633,6 +635,8 @@ void RadioManagement_SetPaBias()
         calc_var = 255;
     }
     Board_SetPaBiasValue(calc_var);
+    // Husarek DSP
+    PCF8574_digitalWrite(R_T_Pin, HIGH);
 }
 
 
@@ -963,6 +967,11 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             if (tx_pa_disabled == false)
             {
                 Board_RedLed(LED_STATE_ON); // TX
+                // Husarek DSP 20190724
+                // wyłączenie przekaźników na czas nadawania
+                PCF8574_RF_digitalWrite(ATT_pin, GPIO_PIN_RESET);
+                PCF8574_RF_digitalWrite(AMP1_pin, GPIO_PIN_RESET);
+                // Husarek DSP end
                 Board_GreenLed(LED_STATE_OFF);
                 Board_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
             }
@@ -994,6 +1003,25 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             Board_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
             Board_RedLed(LED_STATE_OFF);      // TX led off
             Board_GreenLed(LED_STATE_ON);      // TX led off
+            // Husarek DSP 20190724
+            // przywrócenie stanu przekaźników przy odbiorze
+            if (ts.ATT_is_on)
+              {
+                PCF8574_RF_digitalWrite(ATT_pin, GPIO_PIN_SET);
+              }
+            else
+              {
+                PCF8574_RF_digitalWrite(ATT_pin, GPIO_PIN_RESET);
+              }
+            if (ts.AMP1_is_on)
+              {
+                PCF8574_RF_digitalWrite(AMP1_pin, GPIO_PIN_SET);
+              }
+            else
+              {
+                PCF8574_RF_digitalWrite(AMP1_pin, GPIO_PIN_RESET);
+              }
+            // Husarek end
             ts.audio_dac_muting_flag = false; // unmute audio output
             //CwGen_PrepareTx(); // make sure the keyer is set correctly for next round
             // commented out as resetting now part of cw_gen state machine

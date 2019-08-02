@@ -141,6 +141,9 @@ static bool UiDriver_SaveConfiguration();
 static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
+// Husarek DSP
+static void switch_bands(uint8_t new_band_index);
+void set_FPP(uint8_t kod_pasma);
 
 
 // encoder one
@@ -1710,6 +1713,8 @@ static void UiDriver_DisplayBand(const BandInfo* band)
 	{
 	    const char* bandName;
 	    bool print_bc_name = true;
+	    // Husarek DSP
+	  switch_bands(band->band_mode);
 
 		uint16_t col = Orange; // default color for non-bc band
 
@@ -7576,5 +7581,152 @@ void UiDriver_BacklightDimHandler()
 	{ // LCD is to be blanked - if NOT in menu mode
 		UiLcdHy28_BacklightEnable(false);
 	}
+}
+/**
+ * Husarek DSP
+ * @brief wysłanie kodu do przełącznika pasm
+ */
+void set_FPP(uint8_t kod_pasma)
+{
+  switch (kod_pasma) {
+    case 0:
+      PCF8574_digitalWrite(D_Pin, LOW);
+      PCF8574_digitalWrite(C_Pin, LOW);
+      PCF8574_digitalWrite(B_Pin, LOW);
+      PCF8574_digitalWrite(A_Pin, LOW);
+      break;
+    case 1:
+      PCF8574_digitalWrite(D_Pin, LOW);
+      PCF8574_digitalWrite(C_Pin, LOW);
+      PCF8574_digitalWrite(B_Pin, LOW);
+      PCF8574_digitalWrite(A_Pin, HIGH);
+      break;
+    case 2:
+      PCF8574_digitalWrite(D_Pin, LOW);
+      PCF8574_digitalWrite(C_Pin, LOW);
+      PCF8574_digitalWrite(B_Pin, HIGH);
+      PCF8574_digitalWrite(A_Pin, LOW);
+      break;
+    case 3:
+      PCF8574_digitalWrite(D_Pin, LOW);
+      PCF8574_digitalWrite(C_Pin, LOW);
+      PCF8574_digitalWrite(B_Pin, HIGH);
+      PCF8574_digitalWrite(A_Pin, HIGH);
+      break;
+    case 4:
+      PCF8574_digitalWrite(D_Pin, LOW);
+      PCF8574_digitalWrite(C_Pin, HIGH);
+      PCF8574_digitalWrite(B_Pin, LOW);
+      PCF8574_digitalWrite(A_Pin, LOW);
+      break;
+    case 5:
+      PCF8574_digitalWrite(D_Pin, LOW);
+      PCF8574_digitalWrite(C_Pin, HIGH);
+      PCF8574_digitalWrite(B_Pin, LOW);
+      PCF8574_digitalWrite(A_Pin, HIGH);
+      break;
+    case 6:
+      PCF8574_digitalWrite(D_Pin, LOW);
+      PCF8574_digitalWrite(C_Pin, HIGH);
+      PCF8574_digitalWrite(B_Pin, HIGH);
+      PCF8574_digitalWrite(A_Pin, LOW);
+      break;
+    case 7:
+      PCF8574_digitalWrite(D_Pin, LOW);
+      PCF8574_digitalWrite(C_Pin, HIGH);
+      PCF8574_digitalWrite(B_Pin, HIGH);
+      PCF8574_digitalWrite(A_Pin, HIGH);
+      break;
+    case 8:
+      PCF8574_digitalWrite(D_Pin, HIGH);
+      PCF8574_digitalWrite(C_Pin, LOW);
+      PCF8574_digitalWrite(B_Pin, LOW);
+      PCF8574_digitalWrite(A_Pin, LOW);
+      break;
+    case 9:
+      PCF8574_digitalWrite(D_Pin, HIGH);
+      PCF8574_digitalWrite(C_Pin, LOW);
+      PCF8574_digitalWrite(B_Pin, LOW);
+      PCF8574_digitalWrite(A_Pin, HIGH);
+      break;
+    default:
+      break;
+  }
+}
+
+/**
+ * Husarek DSP
+ * @brief przełączanie filtrów w FPP
+ *
+ * @return
+ */
+void switch_bands(uint8_t new_band_index)
+{
+  switch (new_band_index)
+  {
+    case 16: // 1,8MHz
+      set_FPP(2);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_160M, HIGH);
+      //prev_port_PA = PA_160M;
+      break;
+    case 0: // 3,5 MHz
+      set_FPP(0);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_80M, HIGH);
+      //prev_port_PA = PA_80M;
+      break;
+    case 1: // 5 MHz
+      set_FPP(4);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_60M, HIGH);
+      //prev_port_PA = PA_60M;
+      break;
+    case 2: // 7 MHz
+      set_FPP(5);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_40M, HIGH);
+      //prev_port_PA = PA_40M;
+      break;
+    case 3: // 10 MHz
+      set_FPP(9);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_30M, HIGH);
+      //prev_port_PA = PA_30M;
+      break;
+    case 4: // 14 MHz
+      set_FPP(7);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_20M, HIGH);
+      //prev_port_PA = PA_20M;
+      break;
+    case 5: // 18 MHz
+      set_FPP(6);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_17M, HIGH);
+      //prev_port_PA = PA_17M;
+      break;
+    case 6: // 21 MHz
+      set_FPP(3);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_15M, HIGH);
+      //prev_port_PA = PA_15M;
+      break;
+    case 7: // 24 MHz
+      set_FPP(1);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_12M, HIGH);
+      //prev_port_PA = PA_12M;
+      break;
+    case 8: // 28 MHz
+      set_FPP(8);
+      //if (jest_PA)
+        //pa.digitalWrite(PA_10M, HIGH);
+      //prev_port_PA = PA_10M;
+      break;
+    default:
+      // ToDo co jeśli brak filtru?
+      break;
+  }
 }
 

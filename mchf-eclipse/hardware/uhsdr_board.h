@@ -697,6 +697,10 @@ typedef struct TransceiverState
 	// noise reduction gain display in spectrum
     int16_t  nr_gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
     //                                           3 = display bin gain multiplied with long_tone_gain
+    // Husarek DSP:
+    bool ATT_is_on;   // włączony tłumik
+    bool AMP1_is_on;  // włączony wzmacniacz w.cz.
+    bool AMP2_is_on;  // włączony przedwzmacniacz m.cz.
 
 } TransceiverState;
 

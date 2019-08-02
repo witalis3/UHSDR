@@ -88,6 +88,49 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
                 CwGen_DitIRQ();
             }
             break;
+            // Husarek DSP:
+        case BUTTON_E1:   // ATT sygnalizacja włączenia czerwona dioda
+          if (ts.ATT_is_on)
+            {
+              PCF8574_RF_digitalWrite(ATT_pin, GPIO_PIN_RESET);
+              Board_RedLed(LED_STATE_OFF);
+              ts.ATT_is_on = false;
+            }
+          else
+            {
+              PCF8574_RF_digitalWrite(ATT_pin, GPIO_PIN_SET);
+              Board_RedLed(LED_STATE_ON);
+              ts.ATT_is_on = true;
+            }
+          break;
+        case BUTTON_E2:   // AMP1 wzm. w.cz. sygnalizacja włączenia zielona dioda
+          if (ts.AMP1_is_on)
+            {
+              PCF8574_RF_digitalWrite(AMP1_pin, GPIO_PIN_RESET);
+              Board_GreenLed(LED_STATE_OFF);
+              ts.AMP1_is_on = false;
+            }
+          else
+            {
+              PCF8574_RF_digitalWrite(AMP1_pin, GPIO_PIN_SET);
+              Board_GreenLed(LED_STATE_ON);
+              ts.AMP1_is_on = true;
+            }
+          break;
+        case BUTTON_E3:   // AMP2 przedwzm. m.cz. sygnalizacja włączenia niebieska dioda
+          if (ts.AMP2_is_on)
+            {
+              PCF8574_RF_digitalWrite(AMP2_pin, GPIO_PIN_RESET);
+              Board_BlueLed(LED_STATE_OFF);
+              ts.AMP2_is_on = false;
+            }
+          else
+            {
+              PCF8574_RF_digitalWrite(AMP2_pin, GPIO_PIN_SET);
+              Board_BlueLed(LED_STATE_ON);
+              ts.AMP2_is_on = true;
+            }
+          break;
         }
     }
 }
