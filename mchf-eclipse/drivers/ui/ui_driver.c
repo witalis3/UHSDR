@@ -6009,11 +6009,15 @@ void UiDriver_StartUpScreenFinish()
 	        UiDriver_StartupScreen_LogIfProblem(true, tx);
 	    }
 	}
-
-	if(!Si5351a_IsPresent()) {
+	// Husarek DSP
+	// wyłączenie niepotrzebnego komunikatu
+	/*
+	if(!Si5351a_IsPresent())
+	{
 	  UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
 			"SWR Bridge resistor mod NOT completed!");
 	}
+	*/
 
 	// we report this problem only if we are theoretically able to transmit
 	// and tx was not disabled such as in a RX only device
