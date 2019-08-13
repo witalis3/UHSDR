@@ -7664,73 +7664,74 @@ void set_FPP(uint8_t kod_pasma)
  *
  * @return
  */
-void switch_bands(uint8_t new_band_index)
+void switch_bands ( uint8_t new_band_index )
 {
-  switch (new_band_index)
-  {
+    cat_PA_send( new_band_index );
+    switch ( new_band_index )
+    {
     case 16: // 1,8MHz
-      set_FPP(2);
-      //if (jest_PA)
+        set_FPP ( 2 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_160M, HIGH);
-      //prev_port_PA = PA_160M;
-      break;
+        //prev_port_PA = PA_160M;
+        break;
     case 0: // 3,5 MHz
-      set_FPP(0);
-      //if (jest_PA)
+        set_FPP ( 0 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_80M, HIGH);
-      //prev_port_PA = PA_80M;
-      break;
+        //prev_port_PA = PA_80M;
+        break;
     case 1: // 5 MHz
-      set_FPP(4);
-      //if (jest_PA)
+        set_FPP ( 4 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_60M, HIGH);
-      //prev_port_PA = PA_60M;
-      break;
+        //prev_port_PA = PA_60M;
+        break;
     case 2: // 7 MHz
-      set_FPP(5);
-      //if (jest_PA)
+        set_FPP ( 5 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_40M, HIGH);
-      //prev_port_PA = PA_40M;
-      break;
+        //prev_port_PA = PA_40M;
+        break;
     case 3: // 10 MHz
-      set_FPP(9);
-      //if (jest_PA)
+        set_FPP ( 9 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_30M, HIGH);
-      //prev_port_PA = PA_30M;
-      break;
+        //prev_port_PA = PA_30M;
+        break;
     case 4: // 14 MHz
-      set_FPP(7);
-      //if (jest_PA)
+        set_FPP ( 7 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_20M, HIGH);
-      //prev_port_PA = PA_20M;
-      break;
+        //prev_port_PA = PA_20M;
+        break;
     case 5: // 18 MHz
-      set_FPP(6);
-      //if (jest_PA)
+        set_FPP ( 6 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_17M, HIGH);
-      //prev_port_PA = PA_17M;
-      break;
+        //prev_port_PA = PA_17M;
+        break;
     case 6: // 21 MHz
-      set_FPP(3);
-      //if (jest_PA)
+        set_FPP ( 3 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_15M, HIGH);
-      //prev_port_PA = PA_15M;
-      break;
+        //prev_port_PA = PA_15M;
+        break;
     case 7: // 24 MHz
-      set_FPP(1);
-      //if (jest_PA)
+        set_FPP ( 1 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_12M, HIGH);
-      //prev_port_PA = PA_12M;
-      break;
+        //prev_port_PA = PA_12M;
+        break;
     case 8: // 28 MHz
-      set_FPP(8);
-      //if (jest_PA)
+        set_FPP ( 8 );
+        //if (jest_PA)
         //pa.digitalWrite(PA_10M, HIGH);
-      //prev_port_PA = PA_10M;
-      break;
+        //prev_port_PA = PA_10M;
+        break;
     default:
-      // ToDo co jeśli brak filtru?
-      break;
-  }
+        // ToDo co jeśli brak filtru?
+        break;
+    }
 }
 
