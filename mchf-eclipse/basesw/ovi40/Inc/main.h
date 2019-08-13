@@ -44,7 +44,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
   /* Includes ------------------------------------------------------------------*/
-
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -141,6 +140,11 @@
 
 /* USER CODE BEGIN Private defines */
 // Husarek DSP
+// USART6
+#define RxD_Pin GPIO_PIN_9
+#define RxD_GPIO_Port GPIOG
+#define TxD_Pin GPIO_PIN_14
+#define TxD_GPIO_Port GPIOG
 // wyjścia PCF8574 na płytkce BPFów
 #define INPUT 0
 #define OUTPUT 1

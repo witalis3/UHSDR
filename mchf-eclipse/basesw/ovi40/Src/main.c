@@ -57,6 +57,8 @@
 #include "sai.h"
 #include "spi.h"
 #include "tim.h"
+// Husarek DSP
+#include "usart.h"
 #include "usb_device.h"
 #include "usb_host.h"
 #include "gpio.h"
@@ -142,7 +144,8 @@ int main(void)
   MX_SAI2_Init();
   MX_SPI2_Init();
   MX_SPI3_Init();
-  MX_SPI6_Init();
+  // Husarek DSP
+  //MX_SPI6_Init();
   MX_TIM4_Init();
   MX_TIM5_Init();
   MX_TIM8_Init();
@@ -150,6 +153,8 @@ int main(void)
   // MX_USB_HOST_Init();
   // MX_FATFS_Init();
   MX_USB_DEVICE_Init();
+  // Husarek DSP
+  MX_USART6_UART_Init();
 #endif
 
   /* USER CODE BEGIN 2 */
@@ -260,6 +265,9 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
   PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLLSAI;
   PeriphClkInitStruct.Sai2ClockSelection = RCC_SAI2CLKSOURCE_PLLSAI;
+  // Husarek DSP
+  PeriphClkInitStruct.Usart6ClockSelection = RCC_USART6CLKSOURCE_PCLK2;
+
   PeriphClkInitStruct.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInitStruct.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
   PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_PCLK1;

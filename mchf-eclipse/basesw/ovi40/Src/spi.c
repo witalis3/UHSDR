@@ -59,7 +59,8 @@
 
 SPI_HandleTypeDef hspi2;
 SPI_HandleTypeDef hspi3;
-SPI_HandleTypeDef hspi6;
+// Husarek DSP
+// SPI_HandleTypeDef hspi6;
 DMA_HandleTypeDef hdma_spi2_tx;
 
 /* SPI2 init function */
@@ -110,7 +111,9 @@ void MX_SPI3_Init(void)
   }
 
 }
+// Husarek DSP
 /* SPI6 init function */
+/*
 void MX_SPI6_Init(void)
 {
 
@@ -134,7 +137,7 @@ void MX_SPI6_Init(void)
   }
 
 }
-
+*/
 void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 {
 
@@ -213,19 +216,21 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 
   /* USER CODE END SPI3_MspInit 1 */
   }
+  // Husarek DSP
+/*
   else if(spiHandle->Instance==SPI6)
   {
-  /* USER CODE BEGIN SPI6_MspInit 0 */
+   USER CODE BEGIN SPI6_MspInit 0
 
-  /* USER CODE END SPI6_MspInit 0 */
-    /* SPI6 clock enable */
+   USER CODE END SPI6_MspInit 0
+     SPI6 clock enable
     __HAL_RCC_SPI6_CLK_ENABLE();
   
-    /**SPI6 GPIO Configuration    
+    *SPI6 GPIO Configuration
     PG12     ------> SPI6_MISO
     PG13     ------> SPI6_SCK
     PG14     ------> SPI6_MOSI 
-    */
+
     GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -233,10 +238,12 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     GPIO_InitStruct.Alternate = GPIO_AF5_SPI6;
     HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /* USER CODE BEGIN SPI6_MspInit 1 */
+   USER CODE BEGIN SPI6_MspInit 1
 
-  /* USER CODE END SPI6_MspInit 1 */
+   USER CODE END SPI6_MspInit 1
   }
+*/
+
 }
 
 void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
@@ -284,25 +291,28 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
 
   /* USER CODE END SPI3_MspDeInit 1 */
   }
+  // Husarek DSP
+/*
   else if(spiHandle->Instance==SPI6)
   {
-  /* USER CODE BEGIN SPI6_MspDeInit 0 */
+   USER CODE BEGIN SPI6_MspDeInit 0
 
-  /* USER CODE END SPI6_MspDeInit 0 */
-    /* Peripheral clock disable */
+   USER CODE END SPI6_MspDeInit 0
+     Peripheral clock disable
     __HAL_RCC_SPI6_CLK_DISABLE();
   
-    /**SPI6 GPIO Configuration    
+    *SPI6 GPIO Configuration
     PG12     ------> SPI6_MISO
     PG13     ------> SPI6_SCK
     PG14     ------> SPI6_MOSI 
-    */
+
     HAL_GPIO_DeInit(GPIOG, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14);
 
-  /* USER CODE BEGIN SPI6_MspDeInit 1 */
+   USER CODE BEGIN SPI6_MspDeInit 1
 
-  /* USER CODE END SPI6_MspDeInit 1 */
+   USER CODE END SPI6_MspDeInit 1
   }
+*/
 } 
 
 /* USER CODE BEGIN 1 */

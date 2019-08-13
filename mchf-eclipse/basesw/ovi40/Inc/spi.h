@@ -58,7 +58,8 @@
 
 extern SPI_HandleTypeDef hspi2;
 extern SPI_HandleTypeDef hspi3;
-extern SPI_HandleTypeDef hspi6;
+// Husarek DSP
+// extern SPI_HandleTypeDef hspi6;
 
 /* USER CODE BEGIN Private defines */
 
@@ -68,7 +69,8 @@ extern void Error_Handler(void);
 
 void MX_SPI2_Init(void);
 void MX_SPI3_Init(void);
-void MX_SPI6_Init(void);
+// Husarek DSP
+// void MX_SPI6_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
