@@ -20,7 +20,7 @@
 
 
 // Exports
-void cat_PA_send(uint8_t new_band_index );
+void cat_PA_set_freq();
 
 
 #endif /* CAT_CAT_PA_H_ */

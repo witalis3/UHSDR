@@ -40,6 +40,7 @@
 #include "ui_rotary.h"
 
 #include "cat_driver.h"
+#include "cat_PA.h"
 
 // Codec control
 #include "codec.h"
@@ -7666,7 +7667,7 @@ void set_FPP(uint8_t kod_pasma)
  */
 void switch_bands ( uint8_t new_band_index )
 {
-    cat_PA_send( new_band_index );
+    cat_PA_set_freq();
     switch ( new_band_index )
     {
     case 16: // 1,8MHz
