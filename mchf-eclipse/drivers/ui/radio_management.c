@@ -364,10 +364,12 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
     {
         // TX outside bands **very dirty hack**
         //  FIXME: calculate based on 2 frequency points close the selected frequency, should be inter-/extrapolated
-        float32_t adj_min = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_80];
         uint32_t freq_min = RadioManagement_GetBandInfo(BAND_MODE_80)->tune;
-        float32_t adj_max = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_10];
+        float32_t adj_min = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_80] / (RadioManagement_IsPowerFactorReduce(freq_min)? 400: 100);
+
         uint32_t freq_max = RadioManagement_GetBandInfo(BAND_MODE_10)->tune;
+        float32_t adj_max = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_10] / (RadioManagement_IsPowerFactorReduce(freq_max)? 400: 100);
+
         float32_t delta_f = (float32_t)df.tune_old - (float32_t)freq_min; // we must convert to a signed type
         float32_t delta_points = freq_max - freq_min;
 
@@ -378,10 +380,8 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
     else
     {
         pf_bandvalue = ts.pwr_adj[power == 0?ADJ_FULL_POWER:ADJ_REF_PWR][band->band_mode];
+        pf_bandvalue /= RadioManagement_IsPowerFactorReduce(df.tune_old)? 400: 100;
     }
-
-    pf_bandvalue /= RadioManagement_IsPowerFactorReduce(df.tune_old)? 400: 100;
-
 
     float32_t power_factor_scale = 1.0 ;
     // now rescale to power levels below reference power (i.e for mcHF <5 watts) if necessary.
@@ -1160,9 +1160,9 @@ static const CouplingDescriptor mchf_rf_coupling[] =
     { 2500000, COUPLING_160M},
     { 4250000, COUPLING_80M},
     { 8000000, COUPLING_40M},
-    { 1600000, COUPLING_20M},
-    { 3200000, COUPLING_15M},
-    { 6000000, COUPLING_6M},
+    { 16000000, COUPLING_20M},
+    { 32000000, COUPLING_15M},
+    { 60000000, COUPLING_6M},
 };
 
 const int COUPLING_NUM = sizeof(mchf_rf_coupling)/sizeof(CouplingDescriptor);
