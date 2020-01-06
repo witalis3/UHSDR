@@ -24,6 +24,9 @@
 #include "uhsdr_types.h"
 #include "uhsdr_board.h"
 // Frequency public structure
+
+#define MAX_DIGITS 10
+
 typedef struct DialFrequency
 {
     // pot values
@@ -49,12 +52,6 @@ typedef struct DialFrequency
 #define TCXO_UNIT_MASK 0x10
 #define TCXO_UNIT_C 0x00
 #define TCXO_UNIT_F 0x10
-
-
-    // Virtual segments
-    uint8_t dial_digits[9];
-    // Second display
-    uint8_t sdial_digits[9];
 
 } DialFrequency;
 
@@ -100,18 +97,16 @@ inline bool RadioManagement_TcxoIsFahrenheit()
 typedef enum
 {
     PA_LEVEL_FULL = 0,
-    PA_LEVEL_5W,
-    PA_LEVEL_2W,
-    PA_LEVEL_1W,
-    PA_LEVEL_0_5W,
+    PA_LEVEL_HIGH,
+    PA_LEVEL_MEDIUM,
+    PA_LEVEL_LOW,
+    PA_LEVEL_MINIMAL,
     PA_LEVEL_TUNE_KEEP_CURRENT
 } power_level_t;
 
 
 typedef struct {
     power_level_t id;
-    char* name;
-    float32_t power_factor;
     int32_t   mW;
 } power_level_desc_t;
 
@@ -122,8 +117,20 @@ typedef struct {
 
 extern const pa_power_levels_info_t mchf_power_levelsInfo;
 
+typedef struct
+{
+    char* name;
+    float32_t  reference_power;
+    uint32_t  max_freq;
+    uint32_t  min_freq;
+    int32_t max_am_power;
+    int32_t max_power; // power level upper limit, used for display
+} pa_info_t;
 
-#define PA_LEVEL_DEFAULT        PA_LEVEL_2W     // Default power level
+extern const pa_info_t mchf_pa;
+
+
+#define PA_LEVEL_DEFAULT        PA_LEVEL_MEDIUM     // Default power level
 
 #define DEFAULT_FREQ_OFFSET     3000              // Amount of offset (at LO freq) when loading "default" frequency
 
@@ -319,6 +326,7 @@ inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
 uint32_t RadioManagement_GetRealFreqTranslationMode(uint32_t txrx_mode, uint32_t dmod_mode, uint32_t iq_freq_mode);
 const BandInfo* RadioManagement_GetBand(ulong freq);
 bool RadioManagement_FreqIsInBand(BandInfo_c * bandinfo, const uint32_t freq);
+bool RadioManagement_FreqIsInEnabledBand ( uint32_t freq );
 const BandInfo* RadioManagement_GetBandInfo(uint8_t new_band_index);
 bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_level);
 bool RadioManagement_Tune(bool tune);

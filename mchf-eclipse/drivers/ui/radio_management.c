@@ -242,11 +242,11 @@ const BandInfo* RadioManagement_GetBandInfo(uint8_t new_band_index)
 // this structure MUST match the order of entries in power_level_t !
 static const power_level_desc_t mchf_rf_power_levels[] =
 {
-        { .id = PA_LEVEL_FULL, .name = "FULL", .power_factor = 1.0   , .mW = 0,   }, // we use 0 to indicate max power
-        { .id = PA_LEVEL_5W,   .name = "5W"  , .power_factor = 1.0   , .mW = 5000, },
-        { .id = PA_LEVEL_2W,   .name = "2W"  , .power_factor = 0.6324, .mW = 2000, },
-        { .id = PA_LEVEL_1W,   .name = "1W"  , .power_factor = 0.447 , .mW = 1000, },
-        { .id = PA_LEVEL_0_5W, .name = "0.5W"  , .power_factor = 0.316 , .mW =  500, },
+        { .id = PA_LEVEL_FULL,   .mW = 0,    }, // we use 0 to indicate max power
+        { .id = PA_LEVEL_HIGH,   .mW = 5000, },
+        { .id = PA_LEVEL_MEDIUM, .mW = 2000, },
+        { .id = PA_LEVEL_LOW,    .mW = 1000, },
+        { .id = PA_LEVEL_MINIMAL,.mW =  500, },
 };
 
 
@@ -256,23 +256,30 @@ const pa_power_levels_info_t mchf_power_levelsInfo =
         .count = sizeof(mchf_rf_power_levels)/sizeof(*mchf_rf_power_levels),
 };
 
-typedef struct
-{
-    char* name;
-    float32_t  reference_power;
-    int32_t  max_freq;
-    int32_t  min_freq;
-    int32_t max_am_power;
-} pa_info_t;
-
-static const pa_info_t mchf_pa =
+#ifdef RF_BRD_MCHF
+const pa_info_t mchf_pa =
 {
         .name  = "mcHF PA",
         .reference_power = 5000.0,
         .max_freq = 32000000,
         .min_freq =  1800000,
-        .max_am_power = 2000.0,
+        .max_am_power = 2000,
+        .max_power = 10000,
 };
+#endif  // RF_BRD_MCHF
+
+
+#ifdef RF_BRD_LAPWING
+const pa_info_t mchf_pa =
+{
+        .name  = "Lapwing PA",
+        .reference_power = 5000.0,
+        .max_freq = 1300 * 1000000,
+        .min_freq = 1240 * 1000000,
+        .max_am_power = 2000,
+        .max_power = 20000,
+};
+#endif // LAPWING
 
 
 
@@ -333,7 +340,7 @@ void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
 
 
 /**
- * Returns the scaling which needs to be applied to the standard signal levl (which delivers the PA_REFERENCE_POWER)
+ * Returns the scaling which needs to be applied to the standard signal level (which delivers the PA_REFERENCE_POWER)
  * in order to output  the request power.
  * @param powerMw requested power in mW. mW =< 0.0 returns scale 1
  * @return scaling (gain)
@@ -649,7 +656,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
     // Calculate actual tune frequency
     ts.tune_freq_req = RadioManagement_Dial2TuneFrequency(dial_freq, txrx_mode);
 
-    if((ts.tune_freq != ts.tune_freq_req) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
+    if((ts.tune_freq != ts.tune_freq_req) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
     {
 
         if(ts.sysclock-ts.last_tuning > 5 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
@@ -739,11 +746,13 @@ void RadioManagement_MuteTemporarilyRxAudio()
 Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
 {
     // we check with the si570 code if the frequency is tunable, we do not tune to it.
-    bool osc_ok = osc->prepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
-    // we also check if our PA is able to support this frequency
+	Oscillator_ResultCodes_t osc_res = osc->prepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
+    bool osc_ok = osc_res == OSC_OK || osc_res == OSC_TUNE_LIMITED;
+	
+	// we also check if our PA is able to support this frequency
     bool pa_ok = dial_freq >= mchf_pa.min_freq && dial_freq <= mchf_pa.max_freq;
 
-    return pa_ok && osc_ok;
+    return pa_ok && osc_ok ? osc_res: OSC_TUNE_IMPOSSIBLE;
 }
 
 /**
@@ -1284,12 +1293,34 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
 }
 
 /**
+ *  * Is the given frequency in the limits of a band?
+ * @param bandInfo* ptr to band info for this band
  * @param freq the frequency to check
  */
 bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
 {
     assert(bandinfo != NULL);
     return (freq >= bandinfo->tune) && (freq <= (bandinfo->tune + bandinfo->size));
+}
+
+/**
+ * Is the given frequency in an enabled band?
+ * @param freq the frequency to check
+ * @returns true if in any of the currently enabled bands
+ */
+bool RadioManagement_FreqIsInEnabledBand ( uint32_t freq )
+{
+    bool retval = false;
+    for ( int idx = 0; idx < MAX_BAND_NUM; idx++ )
+    {
+        if ( band_enabled[idx] )
+        {
+            retval = true;
+            RadioManagement_FreqIsInBand( bandInfo[idx], freq);
+            break; // we found the first enabled band following the current one
+        }
+    }
+    return retval;
 }
 
 /**
@@ -1718,7 +1749,7 @@ bool RadioManagement_UpdatePowerAndVSWR()
                 swrm.high_vswr_detected = true;
 
                 // change output power to "PA_LEVEL_0_5W" when VSWR protection is active
-                RadioManagement_SetPowerLevel ( RadioManagement_GetBand ( df.tune_new), PA_LEVEL_0_5W );
+                RadioManagement_SetPowerLevel ( RadioManagement_GetBand ( df.tune_new), PA_LEVEL_MINIMAL );
             }
         }
 

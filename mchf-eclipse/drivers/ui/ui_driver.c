@@ -15,6 +15,7 @@
 // Common
 #include "uhsdr_board.h"
 #include "profiling.h"
+#include <assert.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -756,10 +757,6 @@ static void UiDriver_ToggleDigitalMode()
  */
 void UiDriver_FrequencyUpdateLOandDisplay(bool full_update)
 {
-	if (full_update)
-	{
-		ts.refresh_freq_disp = 1;           // update ALL digits
-	}
 	if(is_splitmode())
 	{
 		// SPLIT mode
@@ -770,7 +767,6 @@ void UiDriver_FrequencyUpdateLOandDisplay(bool full_update)
 	{
 		UiDriver_UpdateFrequency(false,UFM_AUTOMATIC);
 	}
-	ts.refresh_freq_disp = 0;           // update ALL digits
 }
 
 void UiDriver_DebugInfo_DisplayEnable(bool enable)
@@ -1598,62 +1594,61 @@ void UiDriver_DisplayDemodMode()
 	UiDriver_DisplayModulationType();
 }
 
-
+/**
+ * This function gives a visual indication of the selected step size for the tuning knob. It draws a line under the respective digit in the frequency.
+ * This function is closely coupled to the code for displaying the frequency digits.
+ */
 void UiDriver_DisplayFreqStepSize()
 {
 
-	int	line_loc;
 	static	bool	step_line = 0;	// used to indicate the presence of a step line
-	uint32_t	color;
-	uint32_t 	stepsize_background;
 
-	color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
-	stepsize_background = (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)?Blue:Black;
+	const uint16_t font_width = is_splitmode()?SMALL_FONT_WIDTH:LARGE_FONT_WIDTH;
+    const uint16_t x_pos = is_splitmode()?ts.Layout->TUNE_SPLIT_FREQ_X:ts.Layout->TUNE_FREQ.x;
+    const uint16_t x_right = x_pos + (9* font_width);
+	const uint32_t color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
+	const uint32_t stepsize_background = (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)?Blue:Black;
 	// dynamic_tuning active -> yes, display on Grey3
 
 	if(step_line)	 	// Remove underline indicating step size if one had been drawn
 	{
-		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_FREQ.x,(ts.Layout->TUNE_FREQ.y + 24),(LARGE_FONT_WIDTH*10),LCD_DIR_HORIZONTAL,Black);
-		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_SPLIT_FREQ_X,(ts.Layout->TUNE_FREQ.y + 24),(SMALL_FONT_WIDTH*10),LCD_DIR_HORIZONTAL,Black);
+        const int32_t space_l = 3*(LARGE_FONT_WIDTH * 3 + LARGE_FONT_WIDTH/2); //3 digits plus a half width dot
+        const int32_t space_s = 3*(SMALL_FONT_WIDTH * 3 + SMALL_FONT_WIDTH/2); //3 digits plus a half width dot
+
+		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_FREQ.x,(ts.Layout->TUNE_FREQ.y + 24),space_l,LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_SPLIT_FREQ_X,(ts.Layout->TUNE_FREQ.y + 24),space_s,LCD_DIR_HORIZONTAL,Black);
 	}
 
 	// Blank old step size
 	// UiLcdHy28_DrawFullRect(POS_TUNE_STEP_X,POS_TUNE_STEP_Y-1,POS_TUNE_STEP_MASK_H,POS_TUNE_STEP_MASK_W,stepsize_background);
 
-	{
-		char step_name[10];
+	char step_name[10];
+	// I know the code below will not win the price for the most readable code
+	// ever. But it does the job of display any freq step somewhat reasonable.
+	// khz/Mhz only whole  khz/Mhz is shown, no fraction
+	// showing fractions would require some more coding, which is not yet necessary
+	const int32_t pow10 = log10f(df.tuning_step);
+	const int32_t digit_group = pow10/3;
+	const int32_t digit_idx = pow10%3;
 
-		// I know the code below will not win the price for the most readable code
-		// ever. But it does the job of display any freq step somewhat reasonable.
-		// khz/Mhz only whole  khz/Mhz is shown, no fraction
-		// showing fractions would require some more coding, which is not yet necessary
-		const uint32_t pow10 = log10f(df.tuning_step);
-		line_loc = 9 - pow10 - pow10/3;
-		if (line_loc < 0)
-		{
-			line_loc = -1;
-		}
-		const char* stepUnitPrefix[] = { "","k","M","G","T"};
-		snprintf(step_name,10,"%d%sHz",(int)(df.tuning_step/exp10((pow10/3)*3)), stepUnitPrefix[pow10/3]);
+	const char* stepUnitPrefix[] = { "","k","M","G","T"};
+	snprintf(step_name,10,"%d%sHz",(int)(df.tuning_step/exp10((digit_group)*3)), stepUnitPrefix[digit_group]);
 
-		UiLcdHy28_PrintTextCentered(ts.Layout->TUNE_STEP.x,ts.Layout->TUNE_STEP.y,ts.Layout->TUNE_STEP.w,step_name,color,stepsize_background,0);
-	}
-	//
-	if((ts.freq_step_config & FREQ_STEP_SHOW_MARKER) && line_loc >= 0)	 		// is frequency step marker line enabled?
+	UiLcdHy28_PrintTextCentered(ts.Layout->TUNE_STEP.x,ts.Layout->TUNE_STEP.y,ts.Layout->TUNE_STEP.w,step_name,color,stepsize_background,0);
+
+	if((ts.freq_step_config & FREQ_STEP_SHOW_MARKER) && pow10 < MAX_DIGITS)          // is frequency step marker line enabled?
 	{
-		if(is_splitmode())
-		{
-			UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * line_loc)),(ts.Layout->TUNE_FREQ.y + 24),(SMALL_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
-		}
-		else
-		{
-			UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_FREQ.x + (LARGE_FONT_WIDTH * line_loc)),(ts.Layout->TUNE_FREQ.y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
-		}
-		step_line = 1;	// indicate that a line under the step size had been drawn
+
+	    const int32_t group_space = (font_width * 3) + font_width/2; //3 digits plus a half width dot
+
+	    const uint32_t line_pos =  x_right -  digit_idx * font_width - (digit_group * group_space);
+
+	    UiLcdHy28_DrawStraightLineDouble(line_pos, (ts.Layout->TUNE_FREQ.y + 24),font_width,LCD_DIR_HORIZONTAL,White);
+	    step_line = 1;	// indicate that a line under the step size had been drawn
 	}
 	else	// marker line not enabled
 	{
-		step_line = 0;	// we don't need to erase "step size" marker line in the future
+	    step_line = 0;	// we don't need to erase "step size" marker line in the future
 	}
 }
 
@@ -1694,7 +1689,14 @@ static void UiDriver_DisplayMemoryLabel()
 	uint32_t col = White;
 	if (ts.band->band_mode < MAX_BAND_NUM && ts.cat_band_index == 255)
 	{
-		snprintf(txt,12,"Bnd%s   ", ts.band->name);
+
+#ifdef USE_MEMORY_MODE
+	    // Enable all band memories, don't use band names
+        snprintf(txt,12,"Mem%02d   ", ts.band->band_mode);
+#else
+        // Each memory has its designated band, use that as band
+        snprintf(txt,12,"Bnd%s   ", ts.band->name);
+#endif
 	}
 	if (ts.cat_band_index != 255)		// no band storage place active because of "CAT running in sandbox"
 	{
@@ -1766,19 +1768,21 @@ static void UiDriver_DisplayBand(const BandInfo* band)
 	}
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverInitMainFreqDisplay
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 static void UiDriver_CreateMainFreqDisplay()
 {
-	UiDriver_FButton_F3MemSplit();
+    // TODO: Adjust ts.Layout->TUNE_FREQ.x to match 10 digits display approach, would simplify code
+    const uint16_t font_width = LARGE_FONT_WIDTH;
+    const uint16_t x_right = ts.Layout->TUNE_FREQ.x + (9* font_width);
+    const int32_t group_space = (font_width * 3) + font_width/2; //3 digits plus a half width dot
+    const uint32_t box_width =  font_width + (3 * group_space); // 3 x 3 digits in a group with a dot + 1 x single digit == 10 digits
+
+    UiLcdHy28_DrawFullRect(x_right - box_width,ts.Layout->TUNE_FREQ.y,24, box_width, Black);
+    // clear frequency display area for large digits, which is also the max area for split
+
+    UiDriver_FButton_F3MemSplit();
 	if((is_splitmode()))	 	// are we in SPLIT mode?
 	{
-		UiLcdHy28_PrintText(ts.Layout->TUNE_FREQ.x-16,ts.Layout->TUNE_FREQ.y,"          ",White,Black,1);	// clear large frequency digits
 		UiDriver_DisplaySplitFreqLabels();
 	}
 	UiDriver_DisplayFreqStepSize();
@@ -1930,42 +1934,66 @@ static void UiDriver_DeleteSMeterLabels()
 
 static void UiDriver_DrawPowerMeterLabels()
 {
-	uchar   i;
-	char    num[20];
+
+    const uint16_t y_pos = (ts.Layout->SM_IND.y + 5);
+    const uint16_t x_pos = (ts.Layout->SM_IND.x + 18);
+
+    const int32_t maxW = ((mchf_pa.max_power > 5000) ? mchf_pa.max_power : 5000)  / 1000;
+
+    // get the pwr increment in next integer number of 0.5W steps
+    const float32_t PWR_INCR = (maxW % 5 == 0)? (maxW/10.0) : (maxW/5+1)/2.0  ; //.
 
 	// Leading text
-	UiLcdHy28_PrintText(((ts.Layout->SM_IND.x + 18) - 12),(ts.Layout->SM_IND.y + 5),"P",  White,Black,4);
 
-	UiLcdHy28_PrintText((ts.Layout->SM_IND.x + 185),(ts.Layout->SM_IND.y + 5)," W",White,Black,4);
+	UiLcdHy28_PrintText(x_pos - 12 , y_pos,"P" , White, Black, 4);
+	UiLcdHy28_PrintText(x_pos + 167, y_pos," W", White, Black, 4);
 
 	// Draw middle line
-	UiLcdHy28_DrawStraightLineDouble((ts.Layout->SM_IND.x + 18),(ts.Layout->SM_IND.y + 20),170,LCD_DIR_HORIZONTAL,White);
-	// S Meter -> Y + 20
+	UiLcdHy28_DrawStraightLineDouble(x_pos, y_pos + 15, 170, LCD_DIR_HORIZONTAL, White);
 
 	// Draw s markers on middle white line
-	for(i = 0; i < 12; i++)
+	for(int i = 0; i < 12; i++)
 	{
-		uint8_t v_s;
-		if(i < 10)
+
+		uint16_t pwr_val = i * PWR_INCR;
+
+        char    num[4];
+
+		if(pwr_val < 10)
 		{
-			num[0] = i + 0x30;
+			num[0] = pwr_val + 0x30;
 			num[1] = 0;
 		}
-		else
+		else if (pwr_val < 100)
 		{
-			num[0] = i/10 + 0x30;
-			num[1] = i%10 + 0x30;
+			num[0] = pwr_val/10 + 0x30;
+			num[1] = pwr_val%10 + 0x30;
 			num[2] = 0;
 		}
-
-		// Draw s text, only odd numbers
-		if(!(i%2))
+        else if (pwr_val < 1000)
+        {
+            num[0] = pwr_val/100 + 0x30;
+            num[1] = (pwr_val%100)/10 + 0x30;
+            num[2] = pwr_val%10 + 0x30;
+            num[3] = 0;
+        }
+		else
 		{
-			UiLcdHy28_PrintText(((ts.Layout->SM_IND.x + 18) - 3 + i*15),(ts.Layout->SM_IND.y + 5),num,White,Black,4);
+		    num[0] = 0; // no value display for larger values
 		}
-		// Lines
-		v_s=(i%2)?3:5;
-		UiLcdHy28_DrawStraightLineDouble(((ts.Layout->SM_IND.x + 18) + i*15),((ts.Layout->SM_IND.y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
+		const int dw = UiLcdHy28_TextWidth(num,4);
+
+		// Only every second value is displayed as number,
+		// even indicies are used
+		if(i%2 == 0)
+		{
+			UiLcdHy28_PrintText((x_pos - dw/2 + i*15), y_pos, num, White,Black,4);
+		}
+
+		// Lines, even indicies are shorter to make room for numbers
+		uint8_t v_s= (i%2 != 0)? 3 : 5;
+
+		UiLcdHy28_DrawStraightLineDouble((x_pos + i*15),(y_pos + 15) - v_s, v_s, LCD_DIR_VERTICAL, White);
 	}
 
 
@@ -2167,23 +2195,19 @@ typedef struct MeterState_s
 
 static MeterState meters[METER_NUM];
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverUpdateBtmMeter
-//* Object              : redraw indicator
-//* Input Parameters    : val=indicated value, warn=red warning threshold
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
+/**
+ * Displays a horizontal meter bar as dash segments.
+ *
+ * @param val value to display. Max value (100%) is SMETER_MAX_LEVEL, higher values are cut off.
+ * @param warn At which value shall value is in red color. 0 to disable.
+ * @param color_norm default, non-warning color
+ * @param meterId index of the meter in the internal meter data storage.
+ */
 static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uint8_t meterId)
 {
-	uchar     i;
-	const uint8_t v_s = 3;
-	uint32_t       col = color_norm;
-	uint8_t from, to;
-	uint8_t from_warn = 255;
+    assert(meterId < METER_NUM);
 
-	uint16_t ypos = meterId==METER_TOP?(ts.Layout->SM_IND.y + 28):(ts.Layout->SM_IND.y + 51 - BTM_MINUS);
+	uint8_t from_warn = 255;
 
 	// limit meter
 	if(val > SMETER_MAX_LEVEL)
@@ -2210,6 +2234,7 @@ static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uin
 
 	if(val != meters[meterId].last || from_warn != 255)
 	{
+	    uint8_t from, to;
 
 		// decide if we need to draw more boxes or delete some
 		if (val > meters[meterId].last)
@@ -2236,7 +2261,18 @@ static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uin
 			from = 1;
 		}
 
-		for(i = from; i < to; i++)
+	    uint32_t col = color_norm;
+	    // at start: use the requested value color
+
+	    // the code below is responsible for location and size of the dash segments
+        // and the drawing
+
+        // which of the 2 positions our bar will have
+        const uint16_t ypos = meterId==METER_TOP?(ts.Layout->SM_IND.y + 28):(ts.Layout->SM_IND.y + 51 - BTM_MINUS);
+        // segment line
+        const uint8_t v_s = 3; // segment length
+
+		for(int i = from; i < to; i++)
 		{
 			if (i>val)
 			{
@@ -2246,8 +2282,8 @@ static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uin
 			{
 				col = Red2;                 // yes - display values above that color in red
 			}
-			// Lines
-			UiLcdHy28_DrawStraightLineTriple(((ts.Layout->SM_IND.x + 18) + i*5),(ypos - v_s),v_s,LCD_DIR_VERTICAL,col);
+
+			UiLcdHy28_DrawStraightLineTriple(((ts.Layout->SM_IND.x + 18) + i*(v_s + 2)),(ypos - v_s),v_s,LCD_DIR_VERTICAL,col);
 		}
 
 		meters[meterId].last = val;
@@ -2260,7 +2296,7 @@ static void UiDriver_UpdateTopMeterA(uchar val)
 {
 	ulong clr;
 	UiMenu_MapColors(ts.meter_colour_up,NULL,&clr);
-	UiDriver_UpdateMeter(val,SMETER_MAX_LEVEL+1,clr,METER_TOP);
+	UiDriver_UpdateMeter(val,0,clr,METER_TOP);
 }
 
 /**
@@ -2328,6 +2364,24 @@ void UiDriver_InitBandSet()
         */
         break;
     }
+
+	const char* test = Board_BootloaderVersion();
+	char res = 0;
+	for (int i=0; i<20;i++)			// find last character in bootloader string
+	{
+		if(test[i] == 0)
+		{
+			res = test[i-1];
+			break;
+		}
+	}
+	if(res == 0x61)					// if it is an "a" ==> DF8OE version, enable all bands
+	{
+  		for(int i = 0; i < MAX_BANDS; i++)
+  		{
+      		band_enabled[i] = true;
+  		}
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -2340,10 +2394,10 @@ static void UiDriver_InitFrequency()
 	{
 		vfo[VFO_A].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
 		vfo[VFO_A].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
-        vfo[VFO_A].band[i].decod_mode = DigitalMode_None;   // clear decode mode
+        vfo[VFO_A].band[i].digital_mode = DigitalMode_None;   // clear digital mode
 		vfo[VFO_B].band[i].dial_value = 0xFFFFFFFF;  // clear dial values
 		vfo[VFO_B].band[i].decod_mode = DEMOD_USB;   // clear decode mode
-        vfo[VFO_B].band[i].decod_mode = DigitalMode_None;   // clear decode mode
+        vfo[VFO_B].band[i].digital_mode = DigitalMode_None;   // clear digital mode
 	}
 
 	// Lower bands default to LSB mode
@@ -2357,24 +2411,13 @@ static void UiDriver_InitFrequency()
 	// Init frequency publics(set diff values so update on LCD will be done)
 	df.tune_old 	= 0;
 	df.tune_new 	= 3500001;
-	df.selected_idx = 3; 		// 1 Khz startup step
+	df.selected_idx = T_STEP_1KHZ_IDX; 		// 1 Khz startup step
 	df.tuning_step	= tune_steps[df.selected_idx];
 	df.temp_factor	= 0;
 	df.temp_factor_changed = false;
 	df.temp_enabled = 0;		// startup state of TCXO
 
 	UiDriver_InitBandSet();
-
-	// Set virtual segments initial value (diff than zero!)
-	df.dial_digits[8]	= 0;
-	df.dial_digits[7]	= 0;
-	df.dial_digits[6]	= 0;
-	df.dial_digits[5]	= 0;
-	df.dial_digits[4]	= 0;
-	df.dial_digits[3]	= 0;
-	df.dial_digits[2]	= 0;
-	df.dial_digits[1]	= 0;
-	df.dial_digits[0]	= 0;
 }
 
 /**
@@ -2507,50 +2550,58 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 
 
 
-static void UiDriver_UpdateFreqDisplay(ulong dial_freq, uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
+static void UiDriver_UpdateFreqDisplay(uint32_t dial_freq, uint32_t pos_x_loc, uint32_t pos_y_loc, uint16_t color, uint8_t digit_font)
 {
-	{
+    uint8_t digits[MAX_DIGITS];
+    uint8_t last_non_zero = 0;
+    const uint8_t font_width = UiLcdHy28_TextWidth("0",digit_font);
 
-#define MAX_DIGITS 9
-		ulong dial_freq_temp;
-		int8_t pos_mult[MAX_DIGITS] = {9, 8, 7, 5, 4, 3, 1, 0, -1};
-		uint32_t idx;
-		uint8_t digits[MAX_DIGITS];
-		char digit[2];
-		uint8_t last_non_zero = 0;
+    // Terminate string for digit
+    char digit[2];
+    digit[1] = 0;
 
-		// Terminate string for digit
-		digit[1] = 0;
-		// calculate the digits
-		dial_freq_temp = dial_freq;
-		for (idx = 0; idx < MAX_DIGITS; idx++)
-		{
-			digits[idx] = dial_freq_temp % 10;
-			dial_freq_temp /= 10;
-			if (digits[idx] != 0) last_non_zero = idx;
-		}
-		for (idx = 0; idx < MAX_DIGITS; idx++)
-		{
-			// -----------------------
-			// See if digit needs update
-			if ((digits[idx] != dial_digits[idx]) || ts.refresh_freq_disp)
-			{
-				bool noshow = idx > last_non_zero;
-				// don't show leading zeros, except for the 0th digits
-				digit[0] = noshow?' ':0x30 + (digits[idx] & 0x0F);
-				// Update segment
-				UiLcdHy28_PrintText((pos_x_loc + pos_mult[idx] * font_width), pos_y_loc, digit, color, Black, digit_size);
-			}
-		}
+    // calculate the digits
+    uint32_t dial_freq_temp = dial_freq;
+    for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
+    {
+        digits[idx] = dial_freq_temp % 10;
+        dial_freq_temp /= 10;
+        if (digits[idx] != 0) last_non_zero = idx;
+    }
 
-		for (idx = 3; idx < MAX_DIGITS; idx+=3)
-		{
-			bool noshow = last_non_zero < idx;
-			digit[0] = noshow?' ':'.';
-			UiLcdHy28_PrintText(pos_x_loc+ (pos_mult[idx]+1) * font_width,pos_y_loc,digit,color,Black,digit_size);
-		}
+    const uint16_t group_space = 3* font_width + font_width/2;
 
-	}
+    const uint16_t x_right = pos_x_loc + (9* font_width);
+
+    for (uint32_t idx = 3; idx < MAX_DIGITS; idx+=3)
+    {
+        bool noshow = last_non_zero < idx;
+        int digit_group = idx / 3; // we group every 3 digits
+
+        digit[0] = '.';
+        uint32_t dot_clr = noshow?Black:color;
+        if (digit_font != 5)
+        {
+            UiLcdHy28_PrintText(x_right - (digit_group * group_space) + font_width/2 + 1  ,pos_y_loc,digit,dot_clr,Black,digit_font);
+        }
+        else
+        {
+            UiLcdHy28_PrintText(x_right - (digit_group * group_space) + font_width ,pos_y_loc,digit,dot_clr,Black,digit_font);
+        }
+    }
+
+    for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
+    {
+        int digit_group = idx / 3; // we group every 3 digits
+        int digit_idx = idx % 3;
+
+        bool noshow = idx > last_non_zero;
+        // don't show leading zeros, except for the 0th digits
+        digit[0] = noshow?'0':0x30 + (digits[idx] & 0x0F);
+        uint32_t digit_clr = noshow?Black:color;
+        // Update segment
+        UiLcdHy28_PrintText(x_right -  digit_idx * font_width - (digit_group * group_space), pos_y_loc, digit, digit_clr, Black, digit_font);
+    }
 }
 
 //*----------------------------------------------------------------------------
@@ -2561,46 +2612,38 @@ static void UiDriver_UpdateFreqDisplay(ulong dial_freq, uint8_t* dial_digits, ul
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
+static void UiDriver_UpdateLcdFreq(uint32_t dial_freq, uint16_t color, uint16_t mode)
 {
-	uchar		digit_size;
-	ulong		pos_y_loc;
-	ulong		pos_x_loc;
-	ulong		font_width;
-	uint8_t*		digits_ptr;
+	uint8_t		digit_font;
 
-	//
-	//
 	if(ts.frequency_lock)
 	{
 		// Frequency is locked - change color of display
 		color = Grey;
 	}
 
-	//
 	if(mode == UFM_AUTOMATIC)
 	{
-		if(is_splitmode())  	// in "split" mode?
-		{
-			mode = UFM_SMALL_RX;				// yes - update upper, small digits (receive frequency)
-		}
-		else
-		{
-			mode = UFM_LARGE;				// NOT in split mode:  large, normal-sized digits
-		}
+	    mode = is_splitmode() ? UFM_SMALL_RX : UFM_LARGE;
+		// in "split" mode?
+		// yes - update upper, small digits (receive frequency)
+		// no  - large, normal-sized digits
 	}
 
-	// if (mode != UFM_SECONDARY) {
-	ts.refresh_freq_disp = true; //because of coloured digits...
-	// }
+	uint32_t disp_freq;
+
 	if(ts.xverter_mode)	 	// transverter mode active?
 	{
-		dial_freq *= (ulong)ts.xverter_mode;	// yes - scale by LO multiplier
-		dial_freq += ts.xverter_offset;	// add transverter frequency offset
-		if(dial_freq > 1000000000)		// over 1000 MHz?
-			dial_freq -= 1000000000;		// yes, offset to prevent overflow of display
-		if(ts.xverter_mode && mode != UFM_SECONDARY)	// if in transverter mode, frequency is yellow unless we do the secondary display
-			color = Yellow;
+		disp_freq = dial_freq * ts.xverter_mode + ts.xverter_offset;
+		// yes - scale by LO multiplier and add transverter frequency offset
+		if(ts.xverter_mode && mode != UFM_SECONDARY)	// if in transverter mode, frequency is blue2 unless we do the secondary display
+		{
+			color = Blue2;
+		}
+	}
+	else
+	{
+	    disp_freq = dial_freq;
 	}
 
 	// Handle frequency display offset in "CW RX" modes
@@ -2613,65 +2656,59 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 		case CW_OFFSET_AUTO_RX:	// in "auto" mode with display offset?
 			if(ts.cw_lsb)
 			{
-				dial_freq -= ts.cw_sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
+				disp_freq -= ts.cw_sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
 			}
 			else
 			{
-				dial_freq += ts.cw_sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
+				disp_freq += ts.cw_sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
 			}
 			break;
 		}
 	}
 
+    uint16_t       pos_y_loc;
+    uint16_t       pos_x_loc;
+
 	switch(mode)
 	{
 	case UFM_SMALL_RX:
-		digits_ptr  = df.dial_digits;
-		digit_size = 0;
+		digit_font = 0;
 		pos_y_loc = ts.Layout->TUNE_FREQ.y;
 		pos_x_loc = ts.Layout->TUNE_SPLIT_FREQ_X;
-		font_width = SMALL_FONT_WIDTH;
 		break;
 	case UFM_SMALL_TX:					// small digits in lower location
-		digits_ptr  = df.dial_digits;
-		digit_size = 0;
+		digit_font = 0;
 		pos_y_loc = ts.Layout->TUNE_SPLIT_FREQ_Y_TX;
 		pos_x_loc = ts.Layout->TUNE_SPLIT_FREQ_X;
-		font_width = SMALL_FONT_WIDTH;
 		break;
 	case UFM_SECONDARY:
-		digits_ptr  = df.sdial_digits;
-		digit_size = 0;
+		digit_font = 0;
 		pos_y_loc = ts.Layout->TUNE_SFREQ.y;
 		pos_x_loc = ts.Layout->TUNE_SFREQ.x;
-		font_width = SMALL_FONT_WIDTH;
 		break;
 	case UFM_LARGE:
 	default:			// default:  normal sized (large) digits
-		digits_ptr  = df.dial_digits;
 #ifdef USE_8bit_FONT
-		digit_size=ts.FreqDisplayFont==0?1:5;
+		digit_font=ts.FreqDisplayFont==0?1:5;
 #else
-		digit_size = 1;
+		digit_font = 1;
 #endif
 		pos_y_loc = ts.Layout->TUNE_FREQ.y;
 		pos_x_loc = ts.Layout->TUNE_FREQ.x;
-		font_width = LARGE_FONT_WIDTH;
 	}
+
 	// in SAM mode, never display any RIT etc., but
 	// use small display for display of the carrier frequency that the PLL has locked to
-	if(((ts.dmod_mode == DEMOD_SAM && mode == UFM_SMALL_RX) || (ts.dmod_mode == DEMOD_SAM && mode == UFM_SECONDARY)))
+	if(ts.dmod_mode == DEMOD_SAM && (mode == UFM_SMALL_RX || mode == UFM_SECONDARY))
 	{
-		digits_ptr  = df.sdial_digits;
-		digit_size = 0;
+		digit_font = 0;
 		pos_y_loc = ts.Layout->TUNE_SFREQ.y;
 		pos_x_loc = ts.Layout->TUNE_SFREQ.x;
-		font_width = SMALL_FONT_WIDTH;
-		UiDriver_UpdateFreqDisplay(dial_freq + ads.carrier_freq_offset, digits_ptr, pos_x_loc, font_width, pos_y_loc, Yellow, digit_size);
+		disp_freq += ads.carrier_freq_offset;
+		color = Yellow;
 	}
-	else {
-		UiDriver_UpdateFreqDisplay(dial_freq, digits_ptr, pos_x_loc, font_width, pos_y_loc, color, digit_size);
-	}
+
+    UiDriver_UpdateFreqDisplay(disp_freq, pos_x_loc, pos_y_loc, color, digit_font);
 }
 
 //*----------------------------------------------------------------------------
@@ -2683,28 +2720,24 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 //*----------------------------------------------------------------------------
 void UiDriver_ChangeTuningStep(uchar is_up)
 {
-	ulong 	idx = df.selected_idx;
-	uint8_t idx_limit = T_STEP_MAX_STEPS -1;
+    const int8_t step = is_up ? +1 : -1;
+
+	int32_t idx = df.selected_idx;
+
+	int8_t idx_limit = T_STEP_MAX_STEPS;
 
 	if((!ts.xvtr_adjust_flag) && (!ts.xverter_mode))
 	{
 		// are we NOT in "transverter adjust" or transverter mode *NOT* on?
-		idx_limit = T_STEP_100KHZ_IDX;
+		idx_limit = T_STEP_1MHZ_IDX;
 	}
 
-	if(is_up)
+	idx = (idx + step + idx_limit) % idx_limit;
+
+	// 9kHz step only on MW and LW, skip otherwise
+	if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
 	{
-		idx= (idx>=idx_limit)?0:idx+1;
-		// 9kHz step only on MW and LW
-		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
-			idx ++;
-	}
-	else
-	{
-		idx= (idx==0)?idx_limit:idx-1;
-		// 9kHz step only on MW and LW
-		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
-			idx --;
+			idx+= step;
 	}
 
 	df.tuning_step	= tune_steps[idx];
@@ -3307,7 +3340,9 @@ static void UiDriver_ChangeBand(bool is_up)
 		for (int idx  = 1; idx <= MAX_BANDS; idx++)
 		{
 		    uint32_t test_idx = (curr_band_index + ((is_up == true) ? idx : (MAX_BANDS-idx)))% MAX_BANDS;
+#ifndef USE_MEMORY_MODE
 		    if (band_enabled[test_idx])
+#endif
 		    {
 		        new_band_index = test_idx;
 		        break; // we found the first enabled band following the current one
@@ -4478,29 +4513,38 @@ static void UiDriver_DisplayModulationType()
 	}
 	//fdv_clear_display();
 }
+/**
+ * Converts a power value in mW into useful null-terminated string
+ * @param txt char array of at least 5 characters
+ * @param txt_len length of txt array
+ * @param power_mW power value, if 0 result is "FULL"
+ */
+void UiDriver_Power2String(char* txt, size_t txt_len,uint32_t power_mW)
+{
+    if (power_mW == 0 )
+    {
+        snprintf(txt,txt_len,"FULL");
+    }
+    else if (power_mW < 100)
+    {
+        snprintf(txt,txt_len,"%ldmW",power_mW);
+    }
+    else if (power_mW < 1000)
+    {
+        snprintf(txt,txt_len,"0.%ldW",power_mW/100);
+    }
+    else
+    {
+        snprintf(txt,txt_len,"%ldW",power_mW/1000);
+    }
+}
 
 static void UiDriver_DisplayPowerLevel()
 {
     uint16_t fg_clr = White;
     char txt[5];
-    char* txt_ptr = txt;
 
-    if (ts.power == 0 )
-    {
-        txt_ptr = "FULL";
-    }
-    else if (ts.power < 100)
-    {
-        snprintf(txt,sizeof(txt),"%ldmW",ts.power);
-    }
-    else if (ts.power < 1000)
-    {
-        snprintf(txt,sizeof(txt),"0.%ldW",ts.power/100);
-    }
-    else
-    {
-        snprintf(txt,sizeof(txt),"%ldW",ts.power/1000);
-    }
+    UiDriver_Power2String(txt,sizeof(txt),ts.power);
 
     uint16_t bg_clr = Blue; // normal operation
 
@@ -4521,7 +4565,7 @@ static void UiDriver_DisplayPowerLevel()
         bg_clr = Orange;
     }
 
-	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt_ptr,fg_clr,bg_clr,0);
+	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt,fg_clr,bg_clr,0);
 }
 
 static void UiDriver_DisplayDbm()
@@ -6355,23 +6399,23 @@ void UiAction_ChangeFrequencyByTouch()
 {
 	if (ts.frequency_lock == false)
 	{
-		int step = 2000;				// adjust to 500Hz
+		int step = 500;				// adjust to 500Hz
 
 		if(sd.magnify == 3)
 		{
-			step = 400;					// adjust to 100Hz
+			step = 100;					// adjust to 100Hz
 		}
 		if(sd.magnify == 4)
 		{
-			step = 40;					// adjust to 10Hz
+			step = 10;					// adjust to 10Hz
 		}
 		if(sd.magnify == 5)
 		{
-			step = 4;					// adjust to 1Hz
+			step = 1;					// adjust to 1Hz
 		}
 		if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
 		{
-			step = 20000;				// adjust to 5KHz
+			step = 5000;				// adjust to 5KHz
 		}
 
 		//int16_t line =sd.marker_pos[0] + UiSpectrum_GetSpectrumStartX();
