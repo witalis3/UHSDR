@@ -3464,6 +3464,9 @@ static bool UiDriver_CheckFrequencyEncoder()
 
 		// Finally convert to frequency incr/decr
 
+		// moja mała poprawka ;-) na wariactwa przy strojeniu częstotliwości
+		enc_multiplier = 1;
+
 		if(pot_diff>0)
 		{
 			df.tune_new += (df.tuning_step * enc_multiplier);
