@@ -1133,7 +1133,10 @@ static void CatDriver_HandleCommands()
                 new_mode = DEMOD_USB;
                 break;
             case 2: // CW
-                new_cwlsb = false;
+                //new_cwlsb = false;
+                // Witek
+                // CWL na CATcie
+                new_cwlsb = true;
                 new_mode = DEMOD_CW;
                 break;
             case 3: // CW-R
