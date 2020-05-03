@@ -295,7 +295,8 @@ static void TxProcessor_IqFinalProcessing(float32_t scaling, bool swap, iq_buffe
     {
         trans_idx = IQ_TRANS_ON;
     }
-
+// Witek: forsowanie trans_idx; nic nie dało
+    // trans_idx = IQ_TRANS_OFF;
     float32_t *final_i_buffer, *final_q_buffer;
 
     float32_t final_i_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].i * scaling;
