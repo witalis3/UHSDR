@@ -717,7 +717,7 @@ extern __IO TransceiverState ts;
 
 //#define CODEC_USE_SPI
 
-#define DEBUG_COM                        USART1
+#define DEBUG_COM                        USART6
 
 /**
  * @brief Introduces about 40ms of delay (load dependent, since interrupt eats some of the time.

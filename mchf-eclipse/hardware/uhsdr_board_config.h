@@ -127,7 +127,7 @@
 #endif // IS_SMALL_BUILD
 
 // some special switches
-//#define   DEBUG_BUILD
+#define   DEBUG_BUILD
 //#define   DEBUG_FREEDV
 
 // if enabled the alternate (read new and better) noise reduction is active

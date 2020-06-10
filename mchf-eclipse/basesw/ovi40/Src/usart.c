@@ -21,7 +21,9 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-
+/*
+ * USART6 będzie wykorzystany do debugowania
+ */
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart6;

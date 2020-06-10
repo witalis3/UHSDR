@@ -7723,6 +7723,10 @@ void set_FPP(uint8_t kod_pasma)
  */
 void switch_bands ( uint8_t new_band_index )
 {
+    /*
+     * cat nie będzie wykorzystany do sterowania PA; zamiast tego sygnały BAND0-BAND3
+     * USART6 będzie wykorzystany do debugowania
+     */
     cat_PA_set_freq();
     switch ( new_band_index )
     {

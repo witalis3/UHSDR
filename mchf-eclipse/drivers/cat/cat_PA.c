@@ -35,6 +35,7 @@ void cat_PA_set_freq()
     bufor[0] = 0xFD;
     //char* s = "OK";
     HAL_UART_Transmit(&huart6, (uint8_t*)bufor, strlen(bufor), 100);
+    //printf(bufor);
 }
 
 
