@@ -22,6 +22,23 @@
 #include "radio_management.h" // only necessary because of RadioManagement_Request_TxOff
 #include "uhsdr_digi_buffer.h"
 
+
+// character tables borrowed from fldigi / rtty.cxx
+static const char RTTYLetters[] = {
+    '\0',   'E',    '\n',   'A',    ' ',    'S',    'I',    'U',
+    '\r',   'D',    'R',    'J',    'N',    'F',    'C',    'K',
+    'T',    'Z',    'L',    'W',    'H',    'Y',    'P',    'Q',
+    'O',    'B',    'G',    ' ',    'M',    'X',    'V',    ' '
+};
+
+static const char RTTYSymbols[32] = {
+    '\0',   '3',    '\n',   '-',    ' ',    '\a',   '8',    '7',
+    '\r',   '$',    '4',    '\'',   ',',    '!',    ':',    '(',
+    '5',    '"',    ')',    '2',    '#',    '6',    '0',    '1',
+    '9',    '?',    '&',    ' ',    '.',    '/',    ';',    ' '
+};
+
+
 // bits 0-4 -> baudot, bit 5 1 == LETTER, 0 == NUMBER/FIGURE
 const uint8_t Ascii2Baudot[128] =
 {
@@ -57,18 +74,18 @@ const uint8_t Ascii2Baudot[128] =
 		0,
 		0,
 		0,
-		0b100100, // 	 	N
-		0, //	!
-		0, //	"
-		0, //	#
-		0,	// $
-		0, //	%
-		0, //	&
+		0b100100, // 	 	NL
+		0b001101, //	!   N
+		0b010001, //	"   N
+		0b010100, //	#   N
+		0b001001, //    $   N
+		0, 		  //	%
+		0b011010, //	&   N
 		0b000101, //	'	N
 		0b001111, //	(	N
 		0b010010, //	)	N
-		0, //	*
-		0b010001, //	+	N
+		0, 		  //	*
+		0, 		  //	+	
 		0b001100, //	,	N
 		0b000011, //	-	N
 		0b011100, //	.	N
@@ -84,12 +101,12 @@ const uint8_t Ascii2Baudot[128] =
 		0b000110, //	8	N
 		0b011000, //	9	N
 		0b001110, //	:	N
-		0, //	;
-		0, //	<
-		0b011110, //	=
-		0, //	>
+		0b011110, //	;   N
+		0, 		  //	<
+		0,        //	=
+		0,        //	>
 		0b011001, //	?	N
-		0, //	@
+		0,        //	@
 		0b100011, //	A	L
 		0b111001, //	B	L
 		0b101110, //	C	L
@@ -614,11 +631,6 @@ static bool RttyDecoder_waitForStartBit(float32_t sample) {
 }
 
 
-
-static const char RTTYLetters[] = "<E\nA SIU\nDRJNFCKTZLWHYPQOBG^MXV^";
-static const char RTTYSymbols[] = "<3\n- ,87\n$4#,.:(5+)2.60197.^./=^";
-
-
 void Rtty_Demodulator_ProcessSample(float32_t sample)
 {
 
@@ -802,21 +814,29 @@ int16_t Rtty_Modulator_GenSample()
 		{
 			// load the character and add the stop bits;
 			bool bitsFilled = false;
-            uint8_t current_ascii;
-			while ( DigiModes_TxBufferRemove( &current_ascii, RTTY )
-			        && bitsFilled == false )
+
+			while ( bitsFilled == false
+			        &&  DigiModes_TxBufferHasDataFor(RTTY))
 			{
-			    if (current_ascii == 0x04 ) //EOT
+
+			    uint8_t current_ascii;
+
+			    // as the character might have been removed from the buffer,
+			    // we do a final check when removing the character
+			    if (DigiModes_TxBufferRemove( &current_ascii, RTTY ))
 			    {
-			        RadioManagement_Request_TxOff();
-			    }
-			    else
-			    {
-			        uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
-			        if (current_baudot > 0)
-			        { // we have valid baudot code
-			            Rtty_Modulator_Code2Bits(current_baudot);
-			            bitsFilled = true;
+			        if (current_ascii == 0x04 ) //EOT
+			        {
+			            RadioManagement_Request_TxOff();
+			        }
+			        else
+			        {
+			            uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
+			            if (current_baudot > 0)
+			            { // we have valid baudot code
+			                Rtty_Modulator_Code2Bits(current_baudot);
+			                bitsFilled = true;
+			            }
 			        }
 			    }
 			}

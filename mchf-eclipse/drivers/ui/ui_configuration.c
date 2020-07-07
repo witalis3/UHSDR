@@ -129,7 +129,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     UI_C_RX_IQ_ADJ(10M)
 
     { ConfigEntry_UInt8 | Calib_Val, EEPROM_SENSOR_NULL,&swrm.sensor_null,SENSOR_NULL_DEFAULT,SENSOR_NULL_MIN,SENSOR_NULL_MAX},
-    { ConfigEntry_UInt8, EEPROM_XVERTER_DISP,&ts.xverter_mode,0,0,XVERTER_MULT_MAX},
+    { ConfigEntry_UInt32_16, EEPROM_XVERTER_DISP,&ts.xverter_mode,0,0,XVERTER_MULT_MAX},
     { ConfigEntry_UInt8, EEPROM_SPECTRUM_MAGNIFY,&sd.magnify,MAGNIFY_DEFAULT,MAGNIFY_MIN,MAGNIFY_MAX},
     // { ConfigEntry_UInt8, EEPROM_WIDE_FILT_CW_DISABLE,&ts.filter_cw_wide_disable,1,0,1},
     // { ConfigEntry_UInt8, EEPROM_NARROW_FILT_SSB_DISABLE,&ts.filter_ssb_narrow_disable,1,0,1},
@@ -789,27 +789,6 @@ static void __attribute__ ((noinline)) UiConfiguration_ReadConfigEntries(bool lo
     }
 }
 
-void UiConfiguration_UpdateMacroCap(void)
-{
-	for (int i = 0; i < KEYER_BUTTONS; i++)
-	{
-		if (*ts.keyer_mode.macro[i] != '\0')
-		{
-			// Make button label from start of the macro
-		    uint8_t* pmacro = (uint8_t *)ts.keyer_mode.macro[i];
-			int c = 0;
-			while(*pmacro != ' ' && *pmacro != '\0' && c < KEYER_CAP_LEN)
-			{
-				ts.keyer_mode.cap[i][c++] = *pmacro++;
-			}
-			ts.keyer_mode.cap[i][c] = '\0';
-		}
-		else
-		{
-			strcpy((char *) ts.keyer_mode.cap[i], "BTN");
-		}
-	}
-}
 /**
  * Calculate based on current firmware version and stored configuration values, which parameters were not present in the stored configuration and
  * do need to be initialized / reset to the default value.
@@ -938,11 +917,11 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
 
 
     UiReadSettingEEPROM_UInt32( EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,&ts.xverter_offset,0,0,XVERTER_OFFSET_MAX, load_eeprom_defaults);
+    UiReadSettingEEPROM_UInt32( EEPROM_XVERTER_OFFSET_TX_HIGH,EEPROM_XVERTER_OFFSET_TX_LOW,&ts.xverter_offset_tx,0,0,XVERTER_OFFSET_MAX, load_eeprom_defaults);
 
     UiReadSettingEEPROM_Filter(load_eeprom_defaults);
 
     ConfigStorage_CopySerial2Array(EEPROM_KEYER_MEMORY_ADDRESS, (uint8_t *)ts.keyer_mode.macro, sizeof(ts.keyer_mode.macro));
-    UiConfiguration_UpdateMacroCap();
 
     // post configuration loading actions below
     df.tuning_step  = tune_steps[df.selected_idx];
@@ -1033,6 +1012,10 @@ uint16_t UiConfiguration_SaveEepromValues(void)
         if (retval == HAL_OK)
         {
             retval = UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset);
+        }
+        if (retval == HAL_OK)
+        {
+            retval = UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_TX_HIGH,EEPROM_XVERTER_OFFSET_TX_LOW,ts.xverter_offset_tx);
         }
 
         if (retval == HAL_OK)

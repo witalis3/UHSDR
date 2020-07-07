@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2020-02-11T08:55:37  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2020-04-21T08:14:58  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2020-02-11T08:55:37  by "./ui_menu_structure_mdtable.py"
+generated at  2020-04-21T08:14:58  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -77,7 +77,8 @@ generated at  2020-02-11T08:55:37  by "./ui_menu_structure_mdtable.py"
 | **CAT-DIQ-FREQ-XLAT**         (                            CONFIG_CAT_XLAT) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If ON, it reports the displayed frequency. If OFF, it reports the center frequency, which is more useful with SDR programs. | 
 | **PTT via virtual RTS**       (                         CONFIG_CAT_PTT_RTS) | The virtual serial port signal RTS can be used to switch to TX. Use with care, many CAT-able programs also set RTS to aktiv and make the TRX go to TX mode. | 
 | **XVTR Offs/Mult**            (                    CONFIG_XVTR_OFFSET_MULT) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display. | 
-| **XVTR Offset**               (               CONFIG_XVTR_FREQUENCY_OFFSET) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
+| **XVTR Offs. RX**             (               CONFIG_XVTR_FREQUENCY_OFFSET) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
+| **XVTR Offs. TX**             (            CONFIG_XVTR_FREQUENCY_OFFSET_TX) | When transverter mode is enabled, this value is added to the displayed mcHF TX frequency after being multiplied with the XVTR Offs/Mult. Setting it to 0 uses RX offset for TX. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
 | **Step Button Swap**          (               CONFIG_STEP_SIZE_BUTTON_SWAP) | If ON, Step- behaves like Step+ and vice versa. | 
 | **Band+/- Button Swap**       (                    CONFIG_BAND_BUTTON_SWAP) | If ON, Band- behaves like Band+ and vice versa. | 
 | **RTC Start**                 (                           CONFIG_RTC_START) | Start using the RTC and use the modified button layout. Will reboot your mcHF. Please use only if you completed the RTC mod otherwise you will need to disconnect battery and power and reboot to get a working mcHF. This menu is only visible if Backup RAM (VBat) was detected. | 
@@ -263,6 +264,18 @@ generated at  2020-02-11T08:55:37  by "./ui_menu_structure_mdtable.py"
 | **2m   Coupling Adj.**        (             CONFIG_FWD_REV_COUPLING_2M_ADJ) | Power Meter Adjustment factor for the 2m band power values. See Wiki. | 
 | **70cm Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_70CM_ADJ) | Power Meter Adjustment factor for the 70cm band power values. See Wiki. | 
 | **23cm Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_23CM_ADJ) | Power Meter Adjustment factor for the 23cm band power values. See Wiki. | 
+
+
+## Touchscreen via Menu (`MENU_MEN2TOUCH`)
+    
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **Dynamic Tune**              (                           MENU_DYNAMICTUNE) | Toggles dynamic tune mode                      | 
+| **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select the required signal input for transmit (except in CW). Also changeable via long press on M3 | 
+| **Spectrum Type**             (                         MENU_SPECTRUM_MODE) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
+| **Spectrum Magnify**          (                      MENU_SPECTRUM_MAGNIFY) | Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting. | 
+| **Restart Codec**             (                         MENU_RESTART_CODEC) | Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help. | 
+| **Digital Mode**              (                   MENU_DIGITAL_MODE_SELECT) | Select the active digital mode (FreeDV,RTTY, ...). | 
 
 
 ## System Info (`MENU_SYSINFO`)

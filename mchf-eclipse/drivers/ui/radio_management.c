@@ -38,6 +38,7 @@
 
 #include "ui_configuration.h"
 #include "ui_menu.h"  // for CONFIG_160M_FULL_POWER_ADJUST and Co.
+#include "ui_driver.h" // for SWR_MIN_CALC_POWER
 
 #include "config_storage.h"
 
@@ -1741,7 +1742,8 @@ bool RadioManagement_UpdatePowerAndVSWR()
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
 
-        if ( ts.vswr_protection_threshold > 1 )
+		// Perform VSWR protection iff threshold is > 1 AND enough forward power exists for a valid calculation
+        if ( ts.vswr_protection_threshold > 1 && swrm.fwd_pwr >= SWR_MIN_CALC_POWER)
         {
             if ( swrm.vswr > ts.vswr_protection_threshold )
             {
@@ -1943,4 +1945,19 @@ void RadioManagement_FmDevSet5khz(bool is5khz)
 bool RadioManagement_TxPermitted()
 {
     return ts.dmod_mode != DEMOD_SAM && RadioManagement_IsTxDisabled();
+}
+
+bool RadioManagement_Transverter_IsEnabled()
+{
+    return (ts.xverter_mode & 0xf) > 0;
+    }
+
+uint64_t RadioManagement_Transverter_GetFreq(const uint32_t dial_freq, const uint8_t trx_mode)
+{
+    uint32_t xverter_offset = (ts.xverter_offset_tx != 0 && trx_mode == TRX_MODE_TX) ? ts.xverter_offset_tx : ts.xverter_offset;
+
+    uint64_t offset_multiplier = xverter_offset>XVERTER_OFFSET_MAX_HZ? 1000 : 1;
+    uint64_t offset_offset = xverter_offset - (xverter_offset>XVERTER_OFFSET_MAX_HZ ? ((XVERTER_OFFSET_MAX_HZ)-XVERTER_OFFSET_MAX_HZ/1000)  : 0);
+
+    return dial_freq * ts.xverter_mode + offset_offset * offset_multiplier;
 }
