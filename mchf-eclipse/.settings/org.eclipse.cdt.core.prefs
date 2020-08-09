@@ -1,4 +1,9 @@
 eclipse.preferences.version=1
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1123244320/PATH/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1123244320/PATH/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1123244320/PATH/value=C\:\\Users\\48515\\AppData\\Roaming\\xPacks\\@gnu-mcu-eclipse\\windows-build-tools\\2.12.1-1\\.content\\bin;C\:\\Users\\48515\\AppData\\Roaming\\xPacks\\@xpack-dev-tools\\arm-none-eabi-gcc\\9.2.1-1.1.1\\.content\\bin;C\:/Program Files/Java/jre1.8.0_241/bin/server;C\:/Program Files/Java/jre1.8.0_241/bin;C\:/Program Files/Java/jre1.8.0_241/lib/amd64;C\:\\Python27\\;C\:\\Python27\\Scripts;C\:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C\:\\Windows\\system32;C\:\\Windows;C\:\\Windows\\System32\\Wbem;C\:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C\:\\Windows\\System32\\OpenSSH\\;C\:\\Program Files\\nodejs\\;C\:\\ProgramData\\chocolatey\\bin;C\:\\Users\\48515\\AppData\\Local\\Microsoft\\WindowsApps;C\:\\Users\\48515\\AppData\\Roaming\\npm;C\:\\eclipse_MCU
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1123244320/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1123244320/appendContributed=true
 org.eclipse.cdt.core.formatter.alignment_for_arguments_in_method_invocation=16
 org.eclipse.cdt.core.formatter.alignment_for_assignment=16
 org.eclipse.cdt.core.formatter.alignment_for_base_clause_in_type_declaration=80

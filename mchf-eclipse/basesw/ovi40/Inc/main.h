@@ -145,7 +145,7 @@
 #define RxD_GPIO_Port GPIOG
 #define TxD_Pin GPIO_PIN_14
 #define TxD_GPIO_Port GPIOG
-// wyjścia PCF8574 na płytkce BPFów
+// wyjścia PCF8574 na płytce BPFów
 #define INPUT 0
 #define OUTPUT 1
 #define INPUT_PULLUP 2
@@ -167,6 +167,7 @@
 #define AMP1_pin      2 // włączanie wzm. w.cz.
 #define AMP2_pin      3 // włączanie przedwzm. m.cz.
 #define TX_pin        6 // przełączanie toru IQ nadawanie/odbiór w module RF
+
 /* USER CODE END Private defines */
 
 /**

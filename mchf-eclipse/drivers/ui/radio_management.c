@@ -1148,7 +1148,9 @@ static void RadioManagement_SetHWFiltersForFrequency(uint32_t freq)
         {
             if(ts.filter_band != mchf_rf_bandFilters[idx].band_mode)
             {
-                Board_SelectLpfBpf(mchf_rf_bandFilters[idx].band_mode);
+                // Husarek DSP
+                // wyłączenie przełączania przekaźników - wyjścia BAND0-3 będą wykorzystane do sterowania LPF w zewn. PA
+                // Board_SelectLpfBpf(mchf_rf_bandFilters[idx].band_mode);
                 ts.filter_band = mchf_rf_bandFilters[idx].band_mode;
                 nr_params.first_time = 1; // in case of any Bandfilter change restart the NR routine
             }

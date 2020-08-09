@@ -14,6 +14,7 @@
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
 
+#include <mcp23008.h>
 #include "uhsdr_board_config.h"
 #include "uhsdr_mcu.h"
 
@@ -24,6 +25,32 @@
 #include "ui_lcd_hy28.h"
 #include "ui_vkeybrd.h"
 #include "audio_driver.h"
+// Husarek DSP
+/*
+ * typedef enum
+{
+    BAND_MODE_80 = 0,
+    BAND_MODE_60 = 1,
+    BAND_MODE_40 = 2,
+    BAND_MODE_30 = 3,
+    BAND_MODE_20 = 4,
+    BAND_MODE_17 = 5,
+    BAND_MODE_15 = 6,
+    BAND_MODE_12 = 7,
+    BAND_MODE_10 = 8,
+    BAND_MODE_6 =  9,
+    BAND_MODE_4 =  10,
+    BAND_MODE_2 =  11,
+    BAND_MODE_70 = 12,
+    BAND_MODE_23 = 13,
+    BAND_MODE_2200 = 14,
+    BAND_MODE_630 = 15,
+    BAND_MODE_160 = 16,
+    BAND_MODE_GEN = 17          // General Coverage
+} band_mode_t;
+ */
+// poniżej wartości całego rejestru GPIO dla poszczególnych pasm:
+//uint8_t Band_PIN[18] = {2, 4, 4, 4, 8, 8, 16, 16, 32, 64, 5, 6, 64, 64, 64, 64, 1, 64};
 
 struct mchf_waterfall
 {

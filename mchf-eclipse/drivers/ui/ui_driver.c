@@ -69,8 +69,6 @@
 #define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
 #define COL_PWR_IND                 		White
 
-
-
 static void     UiDriver_CreateMainFreqDisplay();
 
 static void     UiDriver_CreateMeters();
@@ -146,6 +144,7 @@ static void UiDriver_DisplayPskSpeed(bool encoder_active);
 // Husarek DSP
 static void switch_bands(uint8_t new_band_index);
 void set_FPP(uint8_t kod_pasma);
+void set_FDP(uint8_t kod_pasma);
 
 
 // encoder one
@@ -7665,6 +7664,129 @@ void UiDriver_BacklightDimHandler()
 }
 /**
  * Husarek DSP
+ * @brief przełączanie FDP własnego PA OVI (5-10W)
+ * @param kod_pasma
+ */
+void set_FDP(uint8_t kod_pasma)
+{
+    /*
+     *
+    DataPort Codes
+    Band    Code
+            DCBA
+    160m    0001
+    80m     0010
+    40m     0011
+    30m     0100
+    20m     0101
+    17m     0110
+    15m     0111
+    12m     1000
+    10m     1001
+    6m      1010
+    60m     1011
+    D -> BAND3
+    C -> BAND2
+    B -> BAND1
+    A -> BAND0
+     */
+
+    //uint8_t data = Band_PIN[kod_pasma];
+    //mcp23008_write(&hmcp, MCP23017_PORTA, 1);
+    uint8_t data = 64;
+    switch (kod_pasma) {
+        case BAND_MODE_160:
+            data = 1;
+            GPIO_ResetBits(BAND3_PIO, BAND3);
+            GPIO_ResetBits(BAND2_PIO, BAND2);
+            GPIO_ResetBits(BAND1_PIO, BAND1);
+            GPIO_SetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_80:
+            data = 2;
+            GPIO_ResetBits(BAND3_PIO, BAND3);
+            GPIO_ResetBits(BAND2_PIO, BAND2);
+            GPIO_SetBits(BAND1_PIO, BAND1);
+            GPIO_ResetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_60:
+            data = 4;
+            GPIO_SetBits(BAND3_PIO, BAND3);
+            GPIO_ResetBits(BAND2_PIO, BAND2);
+            GPIO_SetBits(BAND1_PIO, BAND1);
+            GPIO_SetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_40:
+            data = 4;
+            GPIO_ResetBits(BAND3_PIO, BAND3);
+            GPIO_ResetBits(BAND2_PIO, BAND2);
+            GPIO_SetBits(BAND1_PIO, BAND1);
+            GPIO_SetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_30:
+            data = 4;
+            GPIO_ResetBits(BAND3_PIO, BAND3);
+            GPIO_SetBits(BAND2_PIO, BAND2);
+            GPIO_ResetBits(BAND1_PIO, BAND1);
+            GPIO_ResetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_20:
+            data = 8;
+            GPIO_ResetBits(BAND3_PIO, BAND3);
+            GPIO_SetBits(BAND2_PIO, BAND2);
+            GPIO_ResetBits(BAND1_PIO, BAND1);
+            GPIO_SetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_17:
+            data = 8;
+            GPIO_ResetBits(BAND3_PIO, BAND3);
+            GPIO_SetBits(BAND2_PIO, BAND2);
+            GPIO_SetBits(BAND1_PIO, BAND1);
+            GPIO_ResetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_15:
+            data = 16;
+            GPIO_ResetBits(BAND3_PIO, BAND3);
+            GPIO_SetBits(BAND2_PIO, BAND2);
+            GPIO_SetBits(BAND1_PIO, BAND1);
+            GPIO_SetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_12:
+            data = 16;
+            GPIO_SetBits(BAND3_PIO, BAND3);
+            GPIO_ResetBits(BAND2_PIO, BAND2);
+            GPIO_ResetBits(BAND1_PIO, BAND1);
+            GPIO_ResetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_10:
+            data = 32;
+            GPIO_SetBits(BAND3_PIO, BAND3);
+            GPIO_ResetBits(BAND2_PIO, BAND2);
+            GPIO_ResetBits(BAND1_PIO, BAND1);
+            GPIO_SetBits(BAND0_PIO, BAND0);
+            break;
+        case BAND_MODE_6:
+            data = 64;
+            GPIO_SetBits(BAND3_PIO, BAND3);
+            GPIO_ResetBits(BAND2_PIO, BAND2);
+            GPIO_SetBits(BAND1_PIO, BAND1);
+            GPIO_ResetBits(BAND0_PIO, BAND0);
+            break;
+        default:
+            break;
+    }
+    HAL_StatusTypeDef status = HAL_I2C_Mem_Write(&hi2c1, 0x40, 0x09, 1, &data, 1, I2C_TIMEOUT);
+    if (status == HAL_OK)
+    {
+        send_string("przel LPF ok");
+    }
+    else
+    {
+        send_string("przel LPF NOT ok");
+    }
+}
+/**
+ * Husarek DSP
  * @brief wysłanie kodu do przełącznika pasm
  */
 void set_FPP(uint8_t kod_pasma)
@@ -7747,7 +7869,8 @@ void switch_bands ( uint8_t new_band_index )
      * cat nie będzie wykorzystany do sterowania PA; zamiast tego sygnały BAND0-BAND3
      * USART6 będzie wykorzystany do debugowania
      */
-    cat_PA_set_freq();
+    //cat_PA_set_freq();
+    set_FDP(new_band_index);
     switch ( new_band_index )
     {
     case 16: // 1,8MHz

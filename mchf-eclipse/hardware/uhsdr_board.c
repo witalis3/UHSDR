@@ -36,6 +36,7 @@
 #include "uhsdr_keypad.h"
 #include "osc_si5351a.h"
 
+
 // Transceiver state public structure
 __IO __MCHF_SPECIALMEM TransceiverState ts;
 
@@ -190,6 +191,11 @@ static void Board_BandCntr_Init(void)
     GPIO_SetBits(BAND2_PIO,BAND2);
 }
 // Husarek DSP
+#include "usart.h"
+void send_string(char* s)
+{
+ HAL_UART_Transmit(&huart6, (uint8_t*)s, strlen(s), 100);
+}
 static void Husarek_DSP_init()
 {
     // inicjalizacja PCFa w BPF
@@ -215,6 +221,19 @@ static void Husarek_DSP_init()
     PCF8574_RF_pinMode(TX_pin, OUTPUT);
     PCF8574_RF_digitalWrite(TX_pin, LOW);
     // switch_bands(ts.band); ToDo brak widoczności funkcji
+    //mcp23008_init(&hmcp, &hi2c1, MCP23008_ADDRESS_10);
+    MCP23008_HandleTypeDef hmcp;
+    mcp23008_init(&hmcp, &hi2c1, 0x20);
+    HAL_StatusTypeDef status;
+    status = mcp23008_iodir(&hmcp, MCP23017_PORTA, MCP23008_IODIR_ALL_OUTPUT);
+    if (status == HAL_OK)
+    {
+        send_string("mcp23008 init ok\r\n");
+    }
+    else
+    {
+        send_string("mcp23008 init failed\r\n");
+    }
 }
 
 static void Board_Touchscreen_Init()
