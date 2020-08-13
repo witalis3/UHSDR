@@ -3466,17 +3466,20 @@ static bool UiDriver_CheckFrequencyEncoder()
 
 		// moja mała poprawka ;-) na wariactwa przy strojeniu częstotliwości
 		enc_multiplier = 1;
+		// Husarek DSP
+		// obsługa Copal
+        df.tune_new += (df.tuning_step * enc_multiplier * pot_diff);
 
-		if(pot_diff>0)
+        if(pot_diff>0)
 		{
-			df.tune_new += (df.tuning_step * enc_multiplier);
+			//df.tune_new += (df.tuning_step * enc_multiplier);
 			//itoa(enc_speed,num,6);
 			//UiSpectrumClearDisplay();			// clear display under spectrum scope
 			//UiLcdHy28_PrintText(110,156,num,Cyan,Black,0);
 		}
 		else
 		{
-			df.tune_new -= (df.tuning_step * enc_multiplier);
+			//df.tune_new -= (df.tuning_step * enc_multiplier);
 		}
 
 		if (enc_multiplier != 1)

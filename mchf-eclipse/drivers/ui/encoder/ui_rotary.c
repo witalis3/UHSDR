@@ -201,8 +201,9 @@ int UiDriverEncoderRead(const uint32_t encId)
 
         // SW de-detent routine
         //left this code but think that it is useless because in our encoders (detent count)=(steps per rotation). 03.06.2018 SP9BSL
-
-        if (no_change == false)
+        // Husarek DSP
+        // enkoder Copal
+        if (no_change == false && encId != ENCFREQ)
         {
             encSel[encId].de_detent+=abs(delta);// corrected detent behaviour
             // double counts are now processed - not count lost!
