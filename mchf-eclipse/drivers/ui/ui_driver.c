@@ -7678,7 +7678,7 @@ void set_FDP(uint8_t kod_pasma)
     Band    Code
             DCBA
     160m    0001
-    80m     0010
+    80m     0010    // 3,8 MHz
     40m     0011
     30m     0100
     20m     0101
@@ -7688,6 +7688,9 @@ void set_FDP(uint8_t kod_pasma)
     10m     1001
     6m      1010
     60m     1011
+
+    80m     1100    // 3,5MHz na pasmo 80m dwa kody -> dla skrzynki antenowej -> dwa ustawienia
+
     D -> BAND3
     C -> BAND2
     B -> BAND1
