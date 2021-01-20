@@ -2541,7 +2541,10 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 		// Update frequency display
 		UiDriver_UpdateLcdFreq(dial_freq, clr, mode);
 	}
-	set_FDP(ts.band->band_mode);
+	if (df.tune_new >= 3500000 && df.tune_new <= 4000000 )
+	{
+	    set_FDP(BAND_MODE_80);
+	}
 }
 
 
