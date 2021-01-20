@@ -2541,6 +2541,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 		// Update frequency display
 		UiDriver_UpdateLcdFreq(dial_freq, clr, mode);
 	}
+	set_FDP(ts.band->band_mode);
 }
 
 
@@ -7667,7 +7668,7 @@ void UiDriver_BacklightDimHandler()
 }
 /**
  * Husarek DSP
- * @brief przełączanie FDP własnego PA OVI (5-10W)
+ * @brief przełączanie FDP własnego PA OVI (5-10W) oraz wystawianie kodu na wyjście band data (DCBA)
  * @param kod_pasma
  */
 void set_FDP(uint8_t kod_pasma)
@@ -7710,10 +7711,22 @@ void set_FDP(uint8_t kod_pasma)
             break;
         case BAND_MODE_80:
             data = 2;
-            GPIO_ResetBits(BAND3_PIO, BAND3);
-            GPIO_ResetBits(BAND2_PIO, BAND2);
-            GPIO_SetBits(BAND1_PIO, BAND1);
-            GPIO_ResetBits(BAND0_PIO, BAND0);
+            if (df.tune_new > 3650000)
+            {
+                // część SSB pasma 80m kod 0010
+                GPIO_ResetBits(BAND3_PIO, BAND3);
+                GPIO_ResetBits(BAND2_PIO, BAND2);
+                GPIO_SetBits(BAND1_PIO, BAND1);
+                GPIO_ResetBits(BAND0_PIO, BAND0);
+            }
+            else
+            {
+                // dolna część pasma 80m kod 1100
+                GPIO_SetBits(BAND3_PIO, BAND3);
+                GPIO_SetBits(BAND2_PIO, BAND2);
+                GPIO_ResetBits(BAND1_PIO, BAND1);
+                GPIO_ResetBits(BAND0_PIO, BAND0);
+            }
             break;
         case BAND_MODE_60:
             data = 4;
